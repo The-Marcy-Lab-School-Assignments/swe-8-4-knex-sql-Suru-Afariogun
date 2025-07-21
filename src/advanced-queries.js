@@ -1,77 +1,58 @@
 const knex = require('./knex');
 
 const countNumberOfBooks = async () => {
-  const query = `SELECT COUNT(*) AS total_books FROM books;`;
-
-  const { rows } = await knex.raw(query);
-  console.log('Number of books:', rows);
-  return rows;
+  const result = await knex('books').count('* as count');
+  console.log('Number of books:', result);
+  return result;
 };
 
 const selectAllLongOrMovieBooks = async () => {
-  const query = `
-    SELECT * FROM books
-    WHERE pages > 250 OR genres = 'Movie';
-  `;
-
-  const { rows } = await knex.raw(query);
-  console.log('Long or movie books:', rows);
-  return rows;
+  const result = await knex('books')
+    .where('pages', '>', 250)
+    .orWhere('is_movie', true);
+  console.log('Long or movie books:', result);
+  return result;
 };
 
 const selectBooksBetween150And300Pages = async () => {
-  const query = `SELECT * From books Where pages > 150 AND pages < 300;`;
-
-  const { rows } = await knex.raw(query);
-  console.log('150-300:', rows);
-  return rows;
+  const result = await knex('books')
+    .where('pages', '>', 150)
+    .andWhere('pages', '<', 300);
+  console.log('150-300:', result);
+  return result;
 };
 
 const orderBooksByPages = async () => {
-  const query = `Select * From books Order By pages;`;
-
-  const { rows } = await knex.raw(query);
-  console.log('Short to long:', rows);
-  return rows;
+  const result = await knex('books').orderBy('pages');
+  console.log('Short to long:', result);
+  return result;
 };
 
 const selectLongestBook = async () => {
-  const query = `
-    SELECT * FROM books
-    ORDER BY pages DESC
-    LIMIT 1;
-  `;
-
-  const { rows } = await knex.raw(query);
-  console.log('Longest Book:', rows);
-  return rows;
+  const result = await knex('books')
+    .orderBy('pages', 'desc')
+    .limit(1);
+  console.log('Longest Book:', result);
+  return result;
 };
 
 const aliasIsMovie = async () => {
-  const query = `
-    SELECT title, 
-           CASE 
-             WHEN is_movie THEN 'Movie Adaptation' 
-             ELSE 'No Movie' 
-           END AS movie_status
-    FROM books;
-  `;
-
-  const { rows } = await knex.raw(query);
-  console.log('Fancy output', rows);
-  return rows;
+  const result = await knex('books').select('title', 'is_movie');
+  return result.map(row => ({
+    title: row.title,
+    'Already Filmed': !!row.is_movie
+  }));
 };
 
 const countBooksInGenres = async () => {
-  const query = `
-    SELECT genres, COUNT(*) AS book_count
-    FROM books
-    GROUP BY genres;
-  `;
-
-  const { rows } = await knex.raw(query);
-  console.log('Genre count', rows);
-  return rows;
+  const result = await knex('books')
+    .select('genre')
+    .count('* as book_count')
+    .groupBy('genre');
+  return result.map(row => ({
+    genre: row.genre,
+    book_count: Number(row.book_count)
+  }));
 };
 
 module.exports = {
